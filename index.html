@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Journey Mapping Tool</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+        
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --secondary: #10b981;
+            --secondary-hover: #059669;
+            --bg: #f3f4f6;
+            --surface: #ffffff;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 32px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .header {
+            max-width: 1200px;
+            width: 100%;
+            margin-bottom: 24px;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin: 0 0 8px 0;
+            color: var(--text-main);
+        }
+
+        p.subtitle {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+
+        .toolbar {
+            width: 100%;
+            max-width: 1200px;
+            background: var(--surface);
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .input-group {
+            display: flex;
+            flex: 1;
+            min-width: 300px;
+            gap: 8px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 10px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        button {
+            padding: 10px 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        button.btn-secondary {
+            background: var(--secondary);
+        }
+
+        button.btn-secondary:hover {
+            background: var(--secondary-hover);
+        }
+
+        button.btn-outline {
+            background: transparent;
+            color: var(--text-main);
+            border: 1px solid var(--border);
+        }
+
+        button.btn-outline:hover {
+            background: var(--bg);
+        }
+
+        .workspace {
+            width: 100%;
+            max-width: 1200px;
+            overflow-x: auto;
+            padding-bottom: 20px;
+        }
+        
+        .map-container {
+            display: flex;
+            gap: 20px;
+            padding: 24px;
+            background: var(--surface);
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); 
+            min-height: 500px;
+            width: max-content;
+            min-width: 100%;
+        }
+
+        .column {
+            background: #f8fafc;
+            border-radius: 10px;
+            width: 260px;
+            min-width: 260px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border);
+        }
+
+        .bank-column {
+            background: #eff6ff;
+            border: 1px dashed #93c5fd;
+        }
+
+        .column-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .bank-column .column-header {
+            border-bottom-color: #bfdbfe;
+        }
+
+        .column-header h3 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-main);
+            outline: none;
+            flex: 1;
+        }
+        
+        .editable-title {
+            cursor: text;
+            padding: 2px 4px;
+            border-radius: 4px;
+            border: 1px solid transparent;
+            transition: border 0.2s, background 0.2s;
+        }
+        
+        .editable-title:hover, .editable-title:focus {
+            border-color: var(--border);
+            background: white;
+        }
+
+        .btn-delete-col {
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 18px;
+            background: none;
+            border: none;
+            padding: 0 4px;
+            line-height: 1;
+        }
+
+        .btn-delete-col:hover {
+            color: var(--danger);
+            transform: none;
+            background: transparent;
+        }
+
+        .dropzone {
+            padding: 12px;
+            flex-grow: 1;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: background 0.2s;
+        }
+        
+        .dropzone.drag-over {
+            background: #e2e8f0;
+        }
+
+        .card {
+            background: white;
+            padding: 12px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: var(--text-main);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            cursor: grab;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--primary);
+            transition: transform 0.1s, box-shadow 0.1s;
+            word-break: break-word;
+            line-height: 1.4;
+        }
+        
+        .card.dragging {
+            opacity: 0.5;
+        }
+
+        .card:hover {
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .bank-column .card {
+            border-left-color: #3b82f6;
+        }
+
+        .card-text {
+            flex: 1;
+            margin-right: 8px;
+        }
+
+        .btn-delete-card {
+            color: #9ca3af;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: -2px;
+            padding: 2px;
+        }
+
+        .btn-delete-card:hover {
+            color: var(--danger);
+        }
+        
+        /* Hide UI elements during download */
+        .exporting .bank-column,
+        .exporting .btn-delete-col,
+        .exporting .btn-delete-card {
+            display: none !important;
+        }
+        .exporting .editable-title {
+            border: none !important;
+            background: transparent !important;
+            padding-left: 0 !important;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            width: 100%;
+            max-width: 1200px;
+        }
+        .tab {
+            padding: 10px 20px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-muted);
+        }
+        .tab:hover {
+            border-color: #cbd5e1;
+        }
+        .tab.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* View toggles */
+        .view-section {
+            display: none;
+            width: 100%;
+            max-width: 1200px;
+            flex-direction: column;
+            align-items: center;
+        }
+        .view-section.active {
+            display: flex;
+        }
+
+        /* Persona View */
+        .persona-container {
+            width: 100%;
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            margin-bottom: 24px;
+        }
+        .persona-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .persona-header h2 {
+            margin: 0;
+            color: var(--text-main);
+            font-size: 24px;
+        }
+        .persona-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+        .persona-section h3 {
+            color: var(--primary);
+            margin: 0 0 8px 0;
+            font-size: 16px;
+        }
+        .persona-input {
+            width: 100%;
+            min-height: 80px;
+            padding: 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 15px;
+            outline: none;
+            transition: all 0.2s;
+            background: #f8fafc;
+            color: var(--text-main);
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+        .persona-input:focus {
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        [contenteditable]:empty:before {
+            content: attr(data-placeholder);
+            color: #9ca3af;
+            pointer-events: none;
+            display: block;
+        }
+
+        /* Responsive Layout */
+        @media (max-width: 768px) {
+            .map-container {
+                flex-direction: column;
+            }
+            .column {
+                width: 100%;
+                min-width: 100%;
+            }
+            .bank-column {
+                position: sticky;
+                top: 10px;
+                z-index: 10;
+                max-height: 250px;
+                overflow-y: auto;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            }
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .input-group {
+                min-width: 100%;
+            }
+            .persona-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Journey & Persona Builder</h1>
+        <p class="subtitle">Define your user persona and map out their experience visually.</p>
+    </div>
+
+    <div class="tabs">
+        <div class="tab" onclick="switchTab('persona', this)">User Persona</div>
+        <div class="tab active" onclick="switchTab('journey', this)">Journey Map</div>
+    </div>
+
+    <!-- JOURNEY MAP VIEW -->
+    <div id="journeyView" class="view-section active">
+    
+    <div class="toolbar">
+        <div class="input-group">
+            <input type="text" id="newCardInput" placeholder="E.g., User opens app, Discovers feature...">
+            <button onclick="addCard()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Add Action
+            </button>
+        </div>
+        <button class="btn-secondary" onclick="addPhase()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+            Add Phase
+        </button>
+        <div style="flex-grow: 1;"></div>
+        <button class="btn-outline" onclick="downloadMap()" id="downloadBtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Download Map
+        </button>
+    </div>
+
+    <div class="workspace">
+        <div class="map-container" id="journeyMap">
+            <!-- Unsorted Actions Bank -->
+            <div class="column bank-column">
+                <div class="column-header">
+                    <h3>Action Bank</h3>
+                </div>
+                <div class="dropzone" id="bank" ondrop="drop(event)" ondragover="allowDrop(event)">
+                    <div class="card" draggable="true" ondragstart="drag(event)" id="card-1">
+                        <span class="card-text">Example: User gets an idea</span>
+                        <span class="btn-delete-card" onclick="this.parentElement.remove()">×</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Initial Phase -->
+            <div class="column phase-column">
+                <div class="column-header">
+                    <h3 class="editable-title" contenteditable="true">Phase 1: Discovery</h3>
+                    <button class="btn-delete-col" onclick="this.parentElement.parentElement.remove()" title="Delete Phase">×</button>
+                </div>
+                <div class="dropzone" ondrop="drop(event)" ondragover="allowDrop(event)">
+                </div>
+            </div>
+        </div>
+    </div>
+    </div> <!-- End Journey View -->
+
+    <!-- PERSONA VIEW -->
+    <div id="personaView" class="view-section">
+        <div class="persona-container" id="personaContainer">
+            <div class="persona-header">
+                <h2 class="editable-title" contenteditable="true">Persona Name</h2>
+                <button class="btn-outline" onclick="downloadPersona()" id="downloadPersonaBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    Download Persona
+                </button>
+            </div>
+            
+            <div class="persona-grid">
+                <div class="persona-section">
+                    <h3>I am a...</h3>
+                    <div class="persona-input" contenteditable="true" data-placeholder="e.g., Busy professional, College student, Small business owner"></div>
+                </div>
+                <div class="persona-section">
+                    <h3>I am trying to...</h3>
+                    <div class="persona-input" contenteditable="true" data-placeholder="What is the user's main goal or task?"></div>
+                </div>
+                <div class="persona-section">
+                    <h3>But...</h3>
+                    <div class="persona-input" contenteditable="true" data-placeholder="What is the friction, blocker, or pain point they experience?"></div>
+                </div>
+                <div class="persona-section">
+                    <h3>Because...</h3>
+                    <div class="persona-input" contenteditable="true" data-placeholder="Why does this blocker exist? (Context or root cause)"></div>
+                </div>
+                <div class="persona-section">
+                    <h3>Which makes me feel...</h3>
+                    <div class="persona-input" contenteditable="true" data-placeholder="What is the emotional outcome? (e.g., Frustrated, Confused, Overwhelmed)"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let cardCounter = 2;
+
+        function allowDrop(ev) {
+            ev.preventDefault();
+            const dropzone = ev.target.closest('.dropzone');
+            if(dropzone) {
+                dropzone.classList.add('drag-over');
+            }
+        }
+        
+        function removeDragOver() {
+            document.querySelectorAll('.dropzone').forEach(dz => dz.classList.remove('drag-over'));
+        }
+
+        document.addEventListener('dragleave', (ev) => {
+            const dropzone = ev.target.closest('.dropzone');
+            if(dropzone && !dropzone.contains(ev.relatedTarget)) {
+                dropzone.classList.remove('drag-over');
+            }
+        });
+
+        document.addEventListener('dragend', () => {
+             removeDragOver();
+        });
+
+        function drag(ev) {
+            ev.dataTransfer.setData("text", ev.target.id);
+            ev.target.classList.add('dragging');
+            setTimeout(() => ev.target.classList.remove('dragging'), 0);
+        }
+
+        function drop(ev) {
+            ev.preventDefault();
+            removeDragOver();
+            var data = ev.dataTransfer.getData("text");
+            var card = document.getElementById(data);
+            
+            var dropzone = ev.target.closest('.dropzone');
+            if (dropzone && card) {
+                dropzone.appendChild(card);
+            }
+        }
+
+        function addCard() {
+            const input = document.getElementById('newCardInput');
+            const text = input.value.trim();
+
+            if (text === "") {
+                input.focus();
+                return;
+            }
+
+            const newCard = document.createElement('div');
+            newCard.className = 'card';
+            newCard.draggable = true;
+            newCard.id = 'card-' + cardCounter++;
+            newCard.ondragstart = drag;
+
+            newCard.innerHTML = `
+                <span class="card-text">${text}</span>
+                <span class="btn-delete-card" onclick="this.parentElement.remove()">×</span>
+            `;
+
+            document.getElementById('bank').appendChild(newCard);
+            input.value = "";
+        }
+
+        document.getElementById("newCardInput").addEventListener("keypress", function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                addCard();
+            }
+        });
+
+        function addPhase() {
+            const container = document.getElementById('journeyMap');
+            const phaseCount = container.querySelectorAll('.phase-column').length + 1;
+            const newPhase = document.createElement('div');
+            newPhase.className = 'column phase-column';
+
+            newPhase.innerHTML = `
+                <div class="column-header">
+                    <h3 class="editable-title" contenteditable="true">Phase ${phaseCount}: New Phase</h3>
+                    <button class="btn-delete-col" onclick="this.parentElement.parentElement.remove()" title="Delete Phase">×</button>
+                </div>
+                <div class="dropzone" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            `;
+
+            container.appendChild(newPhase);
+            container.parentElement.scrollLeft = container.parentElement.scrollWidth;
+        }
+
+        function switchTab(viewId, tabElement) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            tabElement.classList.add('active');
+            
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+            document.getElementById(viewId + 'View').classList.add('active');
+        }
+
+        async function downloadPersona() {
+            const btn = document.getElementById('downloadPersonaBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Generating...';
+            btn.disabled = true;
+
+            const container = document.getElementById('personaContainer');
+            
+            try {
+                // Remove border for cleaner export
+                const title = container.querySelector('.editable-title');
+                const origBorder = title.style.border;
+                const origBg = title.style.background;
+                title.style.border = 'none';
+                title.style.background = 'transparent';
+                
+                const canvas = await html2canvas(container, {
+                    scale: 2, 
+                    backgroundColor: '#ffffff',
+                    logging: false,
+                    useCORS: true
+                });
+
+                title.style.border = origBorder;
+                title.style.background = origBg;
+
+                const link = document.createElement('a');
+                link.download = 'user-persona.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            } catch (error) {
+                console.error("Error generating image:", error);
+                alert("There was an error generating the image. Please try again.");
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        async function downloadMap() {
+            const btn = document.getElementById('downloadBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Generating...';
+            btn.disabled = true;
+
+            const mapContainer = document.getElementById('journeyMap');
+            mapContainer.classList.add('exporting');
+            
+            try {
+                const canvas = await html2canvas(mapContainer, {
+                    scale: 2, 
+                    backgroundColor: '#ffffff',
+                    logging: false,
+                    useCORS: true
+                });
+
+                const link = document.createElement('a');
+                link.download = 'user-journey-map.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            } catch (error) {
+                console.error("Error generating image:", error);
+                alert("There was an error generating the image. Please try again.");
+            } finally {
+                mapContainer.classList.remove('exporting');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
