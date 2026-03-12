@@ -276,6 +276,30 @@
             color: var(--danger);
         }
         
+        /* Phase Structure Enhancements */
+        .phase-column .column-header {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 6px;
+        }
+        .phase-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+        .phase-goal {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin: 0;
+            cursor: text;
+        }
+        .phase-goal[contenteditable]:empty:before {
+            content: "Goal: What is the user trying to do?";
+            color: #9ca3af;
+            display: block;
+        }
+
         /* Hide UI elements during download */
         .exporting .bank-column,
         .exporting .btn-delete-col,
@@ -493,12 +517,12 @@
     </div>
 
     <div class="tabs">
-        <div class="tab" onclick="switchTab('persona', this)">User Persona</div>
-        <div class="tab active" onclick="switchTab('journey', this)">Journey Map</div>
+        <div class="tab active" onclick="switchTab('persona', this)">User Persona</div>
+        <div class="tab" onclick="switchTab('journey', this)">Journey Map</div>
     </div>
 
     <!-- JOURNEY MAP VIEW -->
-    <div id="journeyView" class="view-section active">
+    <div id="journeyView" class="view-section">
     
     <div class="toolbar">
         <div class="input-group">
@@ -537,8 +561,11 @@
             <!-- Initial Phase -->
             <div class="column phase-column">
                 <div class="column-header">
-                    <h3 class="editable-title" contenteditable="true">Phase 1: Discovery</h3>
-                    <button class="btn-delete-col" onclick="this.parentElement.parentElement.remove()" title="Delete Phase">×</button>
+                    <div class="phase-title-row">
+                        <h3 class="editable-title" contenteditable="true">Phase 1: Discovery</h3>
+                        <button class="btn-delete-col" onclick="this.parentElement.parentElement.parentElement.remove()" title="Delete Phase">×</button>
+                    </div>
+                    <p class="phase-goal editable-title" contenteditable="true" data-placeholder="Goal: What is the user trying to do?"></p>
                 </div>
                 <div class="dropzone" ondrop="drop(event)" ondragover="allowDrop(event)">
                 </div>
@@ -548,7 +575,7 @@
     </div> <!-- End Journey View -->
 
     <!-- PERSONA VIEW -->
-    <div id="personaView" class="view-section">
+    <div id="personaView" class="view-section active">
         <div class="persona-container" id="personaContainer">
             <div class="persona-header">
                 <h2 class="editable-title" contenteditable="true">Persona Name</h2>
@@ -666,8 +693,11 @@
 
             newPhase.innerHTML = `
                 <div class="column-header">
-                    <h3 class="editable-title" contenteditable="true">Phase ${phaseCount}: New Phase</h3>
-                    <button class="btn-delete-col" onclick="this.parentElement.parentElement.remove()" title="Delete Phase">×</button>
+                    <div class="phase-title-row">
+                        <h3 class="editable-title" contenteditable="true">Phase ${phaseCount}: New Phase</h3>
+                        <button class="btn-delete-col" onclick="this.parentElement.parentElement.parentElement.remove()" title="Delete Phase">×</button>
+                    </div>
+                    <p class="phase-goal editable-title" contenteditable="true" data-placeholder="Goal: What is the user trying to do?"></p>
                 </div>
                 <div class="dropzone" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
             `;
