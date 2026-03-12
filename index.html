@@ -386,6 +386,73 @@
             display: block;
         }
 
+        /* Persona Export Mode Styles */
+        .export-mode.persona-container {
+            border: 1px solid var(--border);
+            box-shadow: none;
+            padding: 48px; 
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #ffffff;
+        }
+        .export-mode .persona-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 2px solid var(--border);
+        }
+        .export-mode .persona-header h2 {
+            font-size: 32px;
+            font-weight: 700;
+        }
+        .export-mode #downloadPersonaBtn {
+            display: none !important;
+        }
+        .export-mode .persona-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 32px 48px;
+        }
+        /* Make "I am a..." title span full width or left column */
+        .export-mode .persona-section:nth-child(1) {
+            grid-column: 1 / -1;
+            margin-bottom: 8px;
+        }
+        .export-mode .persona-section:nth-child(1) .persona-input {
+            font-size: 20px;
+            font-weight: 500;
+            color: var(--primary);
+            min-height: auto;
+            border: none;
+            padding: 0;
+            background: transparent;
+        }
+        .export-mode .persona-section:nth-child(1) h3 {
+            display: none; 
+        }
+        .export-mode .persona-section h3 {
+            font-size: 18px;
+            color: #4b5563;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .export-mode .persona-input {
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+            min-height: auto;
+            font-size: 16px;
+            color: #1f2937;
+            line-height: 1.6;
+        }
+        .export-mode [contenteditable]:empty {
+            display: none; /* Hide empty fields completely on export */
+        }
+        .export-mode .persona-header h2.editable-title {
+            border: none !important;
+            background: transparent !important;
+            padding: 0;
+        }
+
         /* Responsive Layout */
         @media (max-width: 768px) {
             .map-container {
@@ -625,23 +692,19 @@
 
             const container = document.getElementById('personaContainer');
             
+            // Add export-mode class
+            container.classList.add('export-mode');
+            
             try {
-                // Remove border for cleaner export
-                const title = container.querySelector('.editable-title');
-                const origBorder = title.style.border;
-                const origBg = title.style.background;
-                title.style.border = 'none';
-                title.style.background = 'transparent';
-                
+                // Wait a tiny bit for styles to apply before rendering
+                await new Promise(r => setTimeout(r, 100));
+
                 const canvas = await html2canvas(container, {
                     scale: 2, 
                     backgroundColor: '#ffffff',
                     logging: false,
                     useCORS: true
                 });
-
-                title.style.border = origBorder;
-                title.style.background = origBg;
 
                 const link = document.createElement('a');
                 link.download = 'user-persona.png';
@@ -651,6 +714,8 @@
                 console.error("Error generating image:", error);
                 alert("There was an error generating the image. Please try again.");
             } finally {
+                // Remove export mode
+                container.classList.remove('export-mode');
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             }
